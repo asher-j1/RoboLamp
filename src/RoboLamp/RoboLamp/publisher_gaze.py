@@ -1,5 +1,5 @@
 # ROS node to publish gaze X, Y, Z
-# NN Code is from a gaze estimation model, with the ROS node portion written by Asher
+# NN Code is from a gaze estimation model, with modifications and the ROS node portion written by Asher
 
 import rclpy
 from rclpy.node import Node
@@ -139,9 +139,11 @@ def create_pipeline():
 class GazePublisher(Node):
 
     def __init__(self):
+        # A lot of initial set up for everything the camera needs to run
         super().__init__('gaze_pub')
+        self.average_size = 5
         self.publisher_ = self.create_publisher(Float32MultiArray, 'gazepoint', 10)
-        timer_period = 0.5  # seconds
+        self.pose_publisher = self.create_publisher(Float32MultiArray, 'head_pose', 10)
         self.device = depthai.Device(create_pipeline())
         def signal_handler(sig, frame):
             self.running = False
@@ -165,9 +167,17 @@ class GazePublisher(Node):
         self.nose = None
         self.pose = None
         self.gaze = None
-
+        self.x = 0
+        self.y = 0
+        self.z = 0
+        
+        self.xA = []
+        self.yA = []
+        self.zA = []
+        
         self.running = True
-        self.timer = self.create_timer(timer_period, self.timer_callback)
+        self.timer = self.create_timer(0.01, self.timer_callback)
+        # self.timer2 = self.create_timer(0.1, self.average_callback)
         self.threads = [
             threading.Thread(target=self.face_thread),
             threading.Thread(target=self.land_pose_thread),
@@ -176,7 +186,7 @@ class GazePublisher(Node):
         for thread in self.threads:
             thread.start()
 
-    # Don't touch these thread's
+    # Don't touch these threads
     def face_thread(self):
         face_nn = self.device.getOutputQueue("face_nn")
         landmark_in = self.device.getInputQueue("landmark_in")
@@ -290,6 +300,8 @@ class GazePublisher(Node):
             else:
                 return read_correctly, new_frame
                 
+                
+    # Publishes the data when called
     def timer_callback(self):
         try:
             read_correctly, new_frame = self.get_frame()
@@ -302,11 +314,34 @@ class GazePublisher(Node):
             nn_data.setLayer("data", to_planar(self.frame, (300, 300)))
             self.face_in.send(nn_data)
         if self.gaze is not None:
+            gX, gY, gZ = (self.gaze * 100).astype(int)
+            self.xA.append(gX)
+            self.yA.append(gY)
+            self.zA.append(gZ)
             msg = Float32MultiArray()
-            x, y, z = (self.gaze * 100).astype(int)
-            msg.data = (x, y, z)
-            self.publisher_.publish(msg)
-            self.get_logger().info('Publishing movement: "%s"' % msg.data)
+            #self.get_logger().info(f"Accumulating gaze: {gX}, {gY}")
+            if len(self.xA) == self.average_size: 
+                self.average_callback()
+                # msg.data = (gX, gY, gZ)
+                msg.data = (self.x, self.y, self.z)
+                self.publisher_.publish(msg)
+                #self.get_logger().info('Publishing movement: "%s"' % msg.data)
+            
+            # msg2 = Float32MultiArray()
+            # msg2.data = self.pose
+            # self.pose_publisher.publish(msg2)
+            # self.get_logger().info(f'Publishing head pose: {msg.data}')
+            
+    # Calculates the average position
+    def average_callback(self):
+        self.x = sum(self.xA) / len(self.xA)
+        self.y = sum(self.yA) / len(self.yA)
+        self.z = sum(self.zA) / len(self.zA)
+        self.xA = []
+        self.yA = []
+        self.zA = []
+        return
+
 
 def main(args=None):
     rclpy.init(args=args)

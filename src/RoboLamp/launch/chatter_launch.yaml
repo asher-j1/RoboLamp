@@ -1,0 +1,13 @@
+launch:
+- node:
+    pkg: "RoboLamp"
+    exec: "publisher_gaze"
+    name: "talker"
+- node:
+    pkg: "RoboLamp"
+    exec: "subscriber_gaze"
+    name: "listener"
+- node:
+    pkg: "RoboLamp"
+    exec: "move_servo"
+    name: "11"

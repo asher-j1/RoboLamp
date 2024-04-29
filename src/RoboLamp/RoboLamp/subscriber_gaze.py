@@ -22,11 +22,13 @@ class GazeSubscriber(Node):
         
     def calculateIK(self, arr):
         pX, pY, pZ = arr
-        t1 = math.degrees(np.arctan2(pX, pY)) + 90 # Constant offset
+        # pX *= -1
+        pY = 50 -pY # to flip the y but not get negative numbers
+        t1 = math.degrees(np.arctan2(pY, pX))# + 90 # Constant offset
+
+        t1 *= 180/135
     
-        t1 = math.degrees(np.arctan2(pX, pY)) + 90 # Constant offset
-    
-        t2 = 105 # 110 # Do proper math later
+        t2 = 110 # 110 # Do proper math later
     
         # Values used for calculating t3, the last servo
         alpha = t2 - 90
@@ -38,11 +40,11 @@ class GazeSubscriber(Node):
         t3 = (b + c)*11/9 - 90 # 20 offset??
         ikCoords = Float32MultiArray()
         ikCoords.data = (t1, t2, t3)
-        self.get_logger().info('Publishing Angles: "%s"' % ikCoords.data)
+        #self.get_logger().info('Publishing Angles: "%s"' % ikCoords.data)
         return ikCoords
 
     def listener_callback(self, msg):
-        self.get_logger().info('I heard: "%s"' % msg.data)
+        #self.get_logger().info('I heard: "%s"' % msg.data)
         self.publisher_.publish(self.calculateIK(msg.data))
         
 
