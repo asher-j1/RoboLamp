@@ -1,5 +1,4 @@
-# Smart Lamp Project - README
-
+# Smart Lamp Project 
 ## Overview
 
 This project is a smart lamp that tracks the user's gaze and adjusts its lighting direction accordingly. It uses a combination of cameras, servos, and algorithms to compute the gaze point and adjust the lamp's arms to match the user's focus area.
@@ -85,7 +84,5 @@ The repository contains all the code and design files necessary to reconstruct t
 
 - **Servo Noise Reduction:**  
   The servo movement algorithm gradually adjusts angles to reduce noise.
-
-## Notes
 
 This project demonstrates the capability of a smart lamp to adjust its lighting based on the user's gaze. While it requires careful calibration, it provides a unique and interactive experience. For further details, consult the provided code and documentation in the repository.
