@@ -29,7 +29,7 @@ The repository contains all the code and design files necessary to reconstruct t
 - Python 3.11
 - Microcontroller IDE 
 - OpenCV (for gaze tracking)
-- Additional Python libraries (listed in `ros_package/requirements.txt`)
+- Additional Python libraries: Pandas, NumPy, Adfruit
 
 ## Assembly Instructions
 
