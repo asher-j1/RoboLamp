@@ -1,0 +1,3 @@
+depthai
+adafruit-circuitpython-servokit
+adafruit-circuitpython-neopixel
